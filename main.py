@@ -82,10 +82,6 @@ def add():
     form = AddNewMovie()
     if form.validate_on_submit():
         title = form.new_movie_title.data
-        new_movie = Movie(title=title)
-        # db.session.add(new_movie)
-        # db.session.commit()
-
         params = {
             "apikey": KEY,
             "s": title
@@ -103,12 +99,17 @@ def find_movie(index):
     }
     response = requests.get(url=API_URL, params=params)
     movie = response.json()
-    print(movie)
-    new_movie = Movie(title=movie['Title'], year=movie['Year'], description=movie['Plot'], rating=movie['Ratings'][0]['Value'].split('/')[0], img_url=movie['Poster'])
+    ratings = movie.get('Ratings')
+    if ratings and len(ratings) > 0 and 'Value' in ratings[0]:
+        rating_value = float(movie['Ratings'][0]['Value'].split('/')[0])
+    else:
+        rating_value = 0.0
+    new_movie = Movie(title=movie['Title'], year=int(movie['Year']), description=movie['Plot'], rating=rating_value, img_url=movie['Poster'])
     db.session.add(new_movie)
     db.session.commit()
-    return redirect(url_for('home'))
-
+    the_movie = db.session.execute(db.select(Movie).where(Movie.title == movie['Title'])).scalar()
+    movie_id = the_movie.id
+    return redirect(url_for('edit', index=movie_id))
 
 if __name__ == '__main__':
 
