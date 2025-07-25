@@ -10,11 +10,13 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 import requests
+import os
+from dotenv import load_dotenv
 
-KEY = "7de440f6"
+load_dotenv()
+
+KEY = os.getenv("KEY")
 API_URL =  "http://www.omdbapi.com/"
-
-
 
 # CREATE DB
 class Base(DeclarativeBase):
