@@ -8,6 +8,8 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 import requests
 
+
+# CREATE DB
 class Base(DeclarativeBase):
     pass
 
@@ -29,6 +31,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///movie.db"
 db.init_app(app)
 Bootstrap5(app)
 
+
+# CREATE TABLE
 with app.app_context():
     db.create_all()
 
@@ -38,15 +42,11 @@ with app.app_context():
 #     db.session.add()
 #     db.session.commit()
 
-# CREATE DB
-
-
-# CREATE TABLE
-
-
 @app.route("/")
 def home():
-    return render_template("index.html")
+    result = db.session.execute(db.select(Movie).order_by(Movie.id))
+    all_movies = result.scalars()
+    return render_template("index.html", movies = all_movies)
 
 
 if __name__ == '__main__':
