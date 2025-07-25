@@ -1,4 +1,5 @@
 from crypt import methods
+from pydoc import describe
 
 from flask import Flask, render_template, redirect, url_for, request
 from flask_bootstrap import Bootstrap5
@@ -9,6 +10,10 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 import requests
+
+KEY = "7de440f6"
+API_URL =  "http://www.omdbapi.com/"
+
 
 
 # CREATE DB
@@ -78,10 +83,32 @@ def add():
     if form.validate_on_submit():
         title = form.new_movie_title.data
         new_movie = Movie(title=title)
-        db.session.add(new_movie)
-        db.session.commit()
-        return redirect(url_for('home'))
+        # db.session.add(new_movie)
+        # db.session.commit()
+
+        params = {
+            "apikey": KEY,
+            "s": title
+        }
+        response = requests.get(url=API_URL, params=params)
+        movies = response.json()
+        return render_template('select.html', movies=movies['Search'])
     return render_template('add.html', form=form)
+
+@app.route('/add/<string:index>')
+def find_movie(index):
+    params = {
+        "apikey": KEY,
+        "i": index
+    }
+    response = requests.get(url=API_URL, params=params)
+    movie = response.json()
+    print(movie)
+    new_movie = Movie(title=movie['Title'], year=movie['Year'], description=movie['Plot'], rating=movie['Ratings'][0]['Value'].split('/')[0], img_url=movie['Poster'])
+    db.session.add(new_movie)
+    db.session.commit()
+    return redirect(url_for('home'))
+
 
 if __name__ == '__main__':
 
