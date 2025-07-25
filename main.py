@@ -1,3 +1,5 @@
+from crypt import methods
+
 from flask import Flask, render_template, redirect, url_for, request
 from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
@@ -25,6 +27,12 @@ class Movie(db.Model):
     review: Mapped[str] = mapped_column(String(1000), nullable=False)
     img_url: Mapped[str] = mapped_column(String(200), nullable=False)
 
+class RateMovieForm(FlaskForm):
+    rating = StringField("Your Rating Out of 10 e.g. 7.5")
+    review = StringField("Your review")
+    submit = SubmitField("Done")
+
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///movie.db"
@@ -48,6 +56,32 @@ def home():
     all_movies = result.scalars()
     return render_template("index.html", movies = all_movies)
 
+@app.route("/edit/<int:index>", methods=['POST', 'GET'])
+def edit(index):
+    form = RateMovieForm()
+    movie = db.session.get(Movie, index)
+    if form.validate_on_submit():
+        movie.rating = form.rating.data
+        movie.review = form.review.data
+        db.session.commit()
+        return redirect(url_for('home'))
+    return render_template('edit.html', movie = movie, form=form)
+
+@app.route("/<int:index>")
+def delete(index):
+    movie = db.session.get(Movie, index)
+    db.session.delete(movie)
+    db.session.commit()
+    return redirect(url_for('home'))
+
+@app.route('/add')
+def add():
+    new_movie= Movie(
+
+    )
+    db.session.add(new_movie)
+    db.session.commit()
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
 
