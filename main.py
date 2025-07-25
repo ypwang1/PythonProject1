@@ -20,18 +20,21 @@ db = SQLAlchemy(model_class=Base)
 class Movie(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     title: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
-    year: Mapped[int] = mapped_column(nullable=False)
-    description: Mapped[str] = mapped_column(String, nullable=False)
-    rating:Mapped[float] = mapped_column(Float, nullable=False)
-    ranking: Mapped[int] = mapped_column(nullable=False)
-    review: Mapped[str] = mapped_column(String(1000), nullable=False)
-    img_url: Mapped[str] = mapped_column(String(200), nullable=False)
+    year: Mapped[int] = mapped_column(nullable=True)
+    description: Mapped[str] = mapped_column(String, nullable=True)
+    rating:Mapped[float] = mapped_column(Float, nullable=True)
+    ranking: Mapped[int] = mapped_column(nullable=True)
+    review: Mapped[str] = mapped_column(String(1000), nullable=True)
+    img_url: Mapped[str] = mapped_column(String(200), nullable=True)
 
 class RateMovieForm(FlaskForm):
     rating = StringField("Your Rating Out of 10 e.g. 7.5")
     review = StringField("Your review")
     submit = SubmitField("Done")
 
+class AddNewMovie(FlaskForm):
+    new_movie_title = StringField('Movie Title')
+    submit = SubmitField('Add movie')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
@@ -44,11 +47,6 @@ Bootstrap5(app)
 with app.app_context():
     db.create_all()
 
-# Testing new movie
-# with app.app_context():
-#
-#     db.session.add()
-#     db.session.commit()
 
 @app.route("/")
 def home():
@@ -74,14 +72,16 @@ def delete(index):
     db.session.commit()
     return redirect(url_for('home'))
 
-@app.route('/add')
+@app.route('/add', methods=['POST', 'GET'])
 def add():
-    new_movie= Movie(
-
-    )
-    db.session.add(new_movie)
-    db.session.commit()
-    return redirect(url_for('home'))
+    form = AddNewMovie()
+    if form.validate_on_submit():
+        title = form.new_movie_title.data
+        new_movie = Movie(title=title)
+        db.session.add(new_movie)
+        db.session.commit()
+        return redirect(url_for('home'))
+    return render_template('add.html', form=form)
 
 if __name__ == '__main__':
 
